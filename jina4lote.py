@@ -19,8 +19,6 @@ max_tokens=8192
 model = SentenceTransformer("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True, token=token)
 
 
-
-
 def jina4lote(long_text, full_output=False):
     '''
     From the butchered text, embed each chunk and embed it. 
@@ -57,3 +55,4 @@ def text_butcher(text, max_tokens=max_tokens):
         else:
             raise Exception('WTF?!')
     return chunked_texts
+
