@@ -77,3 +77,6 @@ def vec_file_name(year, sector, name):
 def file2vecfile(file):
     y, s, n=file2ysn(file)
     return vec_file_name(y, s, n)
+
+if __name__ == "__main__":
+    main()
