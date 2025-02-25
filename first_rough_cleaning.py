@@ -1,8 +1,12 @@
+import os, sys
+import numpy as np
+
+
 def first_text_cleaner(text):
     _split=split_and_brutal_clean(text)
     _split=remove_indices(_split)
     _split=delete_duplicates(_split)
-    _split=delete_titles(_split)
+    #_split=delete_titles(_split)
     return ' '.join(_split)
 
 def split_and_brutal_clean(text):

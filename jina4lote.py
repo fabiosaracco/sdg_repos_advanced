@@ -26,11 +26,14 @@ def jina4lote(long_text, full_output=False):
     '''
     chunked_text=text_butcher(long_text)
     embeddings=[]
-    for cut in tqdm(text_0_butchered):
+    for cut in tqdm(chunked_text, leave=False):
         embedding = model.encode(cut)
         embeddings.append(embedding)
     chunks_len=[len(chunk) for chunk in chunked_text]
-    return np.average(embeddings, axis=0, weights=chunks_len)
+    if full_output:
+        return embeddings, np.average(embeddings, axis=0, weights=chunks_len)
+    else:
+        return np.average(embeddings, axis=0, weights=chunks_len)
 
 def text_butcher(text, max_tokens=max_tokens):
     '''
