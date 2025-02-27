@@ -6,7 +6,7 @@ def first_text_cleaner(text):
     _split=split_and_brutal_clean(text)
     _split=remove_indices(_split)
     _split=delete_duplicates(_split)
-    #_split=delete_titles(_split)
+    _split=delete_titles(_split)
     return ' '.join(_split)
 
 def split_and_brutal_clean(text):
@@ -52,9 +52,12 @@ def delete_titles(splitted_text):
         if text[0].islower(): 
             # a smaller character indicates it is the end of a previous sentence
             out.append(text)
-        elif any([point in text for point in '.!?']) or splitted_text[counter+1][0].islower():
+        elif any([point in text for point in '.!?']): 
             # we can have either the case in which a sentence is present, and therefore we have a punctuation,
-            # or the case in which the sentence is ended in the following line
             out.append(text)
+        elif counter<len(splitted_text)-1:
+            if splitted_text[counter+1][0].islower():
+                # or the case in which the sentence is ended in the following line
+                out.append(text)
         counter+=1
     return out
