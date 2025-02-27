@@ -18,65 +18,83 @@ TARGET_FOLDER='./NewProcessedData/'
 def main():
     # first, get the files
     files=os.listdir(RTF_FOLDER)
+    files=[file for file in files if file.endswith('.rtf')]
+    files.sort()
     i_f=0
     while i_f<len(files):
         file=files[i_f]
+        
         # get name for the output
         vecfile=file2vecfile(file)
-        print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:100}', end='\r')
-        try:
-            # extract the text from the .rtf file
-            long_text=file2text(RTF_FOLDER+file)
-            # embed the text using Jina
-            vec=jina4lote(long_text)
-        except:
-            _err_msg=traceback.format_exc()
-            print(f'\n[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:100} Error!')
-            print(_err_msg)
-            i_f+=1
-            continue
-        # check if also the next file has the same output:
-        file1=files[i_f+1]
-        vecfile1=file2vecfile(file1)
-        if vecfile==vecfile1:
+        print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:30}')
+        if not os.path.isfile(TARGET_FOLDER+vecfile):
             try:
                 # extract the text from the .rtf file
-                long_text1=file2text(RTF_FOLDER+file1)
+                long_text=file2text(RTF_FOLDER+file)
                 # embed the text using Jina
-                vec1=jina4lote(long_text1)
+                vec=jina4lote(long_text)
             except:
                 _err_msg=traceback.format_exc()
-                print(f'\n[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile1:100} Error!')
+                print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:30}\tError!')
                 print(_err_msg)
-                print('Taking the first embedding.')
-                np.savetxt(TARGET_FOLDER+vecfile, vec, dtype='f8')
-                i_f+=2
+                i_f+=1
                 continue
-            _cs=util.cos_sim(vec, vec1)
-            print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:100}, {vecfile1:100}, cs={_cs:.3f}', end='\r')
-            if 1-_cs>10**-3:
-                print('\nSuch a situation should be handed properly, postponing the issue to a later moment')
+            # check if also the next file has the same output:
+            file1=files[i_f+1]
+            vecfile1=file2vecfile(file1)
+            if vecfile==vecfile1:
+                try:
+                    # extract the text from the .rtf file
+                    long_text1=file2text(RTF_FOLDER+file1)
+                    # embed the text using Jina
+                    vec1=jina4lote(long_text1)
+                except:
+                    _err_msg=traceback.format_exc()
+                    print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile1:100} Error!')
+                    print(_err_msg)
+                    print('Taking the first embedding.')
+                    np.savetxt(TARGET_FOLDER+vecfile, vec)
+                    i_f+=2
+                    continue
+                _cs=float(util.cos_sim(vec, vec1))
+                print(f'[{dt.now():%y-%m-%d %H:%M:%S}] {vecfile:100}, {vecfile1:100}, cs={_cs:.3f}')
+                if 1-_cs>10**-3:
+                    print('Such a situation should be handed properly, postponing the issue to a later moment')
+                else:
+                    print('The difference is limited, taking the former vector.')
+                    np.savetxt(TARGET_FOLDER+vecfile, vec)
+                i_f+=2
             else:
-                print('\nThe difference is limited, taking the former vector.')
-                np.savetxt(TARGET_FOLDER+vecfile, vec, dtype='f8')
-            i_f+=2
+                np.savetxt(TARGET_FOLDER+vecfile, vec)
+                i_f+=1
         else:
-            np.savetxt(TARGET_FOLDER+vecfile, vec, dtype='f8')
             i_f+=1
-        
-    
-    
 
+            
+            
+def file2ysn(file):
+    '''
+    From the file name return, respectively, the year, the sector and the name 
+    '''
+    _split=file.replace('.rtf', '').split('_')
+    #if ' ' in _split[-1] and len(_split[-1])>4:
+    #    return _split[-1].split(' ')[0], _split[0].zfill(2), _split[-2]
+    if '(' in _split[-1] or len(_split[-1])<4:
+        return _split[-2], _split[0].zfill(2), _split[-3]
+    else:
+        return _split[-1], _split[0].zfill(2), _split[-2]
+    
 def say_my_name(name):
     return name.replace(' ', '_')
 
 def vec_file_name(year, sector, name):
     myname=say_my_name(name)
-    return year+'_'+sector+'_'+name+'.txt'
+    return year+'_'+sector+'_'+myname+'.txt'
 
 def file2vecfile(file):
     y, s, n=file2ysn(file)
     return vec_file_name(y, s, n)
+
 
 if __name__ == "__main__":
     main()
